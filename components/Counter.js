@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Text } from "react-native";
 import styled from "styled-components/native";
-import { Button } from "./";
+import Button from "./Button";
 
 const Counter = ({ value, setValue }) => {
   const handleReduce = () => {

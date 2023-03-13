@@ -1,6 +1,6 @@
 import { SafeAreaView, ScrollView } from "react-native";
 import styled from "styled-components/native";
-import { FocusedStatusBar } from "./";
+import FocusedStatusBar from "./FocusedStatusBar";
 
 const Page = ({ children }) => {
   return (
@@ -17,7 +17,7 @@ const Page = ({ children }) => {
 };
 
 const PageWrapper = styled.View`
-  padding-top: 78px;
+  padding-top: 83px;
   flex: 1;
   align-items: center;
   justify-content: center;

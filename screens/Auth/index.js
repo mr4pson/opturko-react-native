@@ -1,29 +1,43 @@
-import React from "react";
-import { Page, Button } from "../../components";
+import React, { useEffect } from "react";
+import { Page, Button, LangSwitch } from "../../components";
 import styled from "styled-components/native";
 import { AuthContext } from "../../context";
 import { handleBtnClick } from "./helpers";
+import { translate } from "../../helpers/translation.helper";
 
-const Auth = () => {
+const Auth = (props) => {
+  const [curLang, setCurLang] = React.useState();
   const [username, setUsername] = React.useState("");
   const [usernameError, setUsernameError] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [passwordError, setPasswordError] = React.useState("");
   const { signIn } = React.useContext(AuthContext);
+  const { languages, translation } = props.route.params;
+
+  useEffect(() => {
+    if (languages.length) {
+      setCurLang(languages[0]);
+    }
+  }, [languages]);
 
   return (
     <Page>
       <AuthForm>
-        <PageHeader>Авторизация</PageHeader>
+        <LangSwitch
+          languages={languages}
+          curLang={curLang}
+          setCurLang={setCurLang}
+        />
+        <PageHeader>{translate(translation, curLang, "auth")}</PageHeader>
         <TextInput
-          placeholder="Логин"
+          placeholder={translate(translation, curLang, "login")}
           value={username}
           onChangeText={setUsername}
           req
         />
         <InputError>{usernameError}</InputError>
         <TextInput
-          placeholder="Пароль"
+          placeholder={translate(translation, curLang, "password")}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -35,10 +49,12 @@ const Auth = () => {
             password,
             setUsernameError,
             setPasswordError,
-            signIn
+            signIn,
+            translation,
+            curLang
           )}
         >
-          Войти
+          {translate(translation, curLang, "signin")}
         </Button>
       </AuthForm>
     </Page>
@@ -52,7 +68,7 @@ const AuthForm = styled.View`
 `;
 
 const PageHeader = styled.Text`
-  font-family: "Inter";
+  /* font-family: "Inter"; */
   font-weight: 600;
   font-size: 26px;
   line-height: 31px;
@@ -70,7 +86,7 @@ const TextInput = styled.TextInput`
 `;
 
 const InputError = styled.Text`
-  font-family: "Inter";
+  /* font-family: "Inter"; */
   font-weight: 600;
   font-size: 16px;
   line-height: 31px;

@@ -1,9 +1,11 @@
 import React from "react";
 import styled from "styled-components";
-import { Button } from "../components";
+import Button from "../components/Button";
+import LangSwitch from "../components/LangSwitch";
 import { AuthContext } from "../context";
+import { translate } from "../helpers/translation.helper";
 
-const Header = () => {
+const Header = ({ languages, translation, curLang, setCurLang }) => {
   const { signOut } = React.useContext(AuthContext);
 
   const handleLogoutPress = () => {
@@ -13,7 +15,18 @@ const Header = () => {
   return (
     <HeaderWrapper>
       <Logo source={require("../assets/logo.png")} />
-      <Button onPress={handleLogoutPress}>Выйти</Button>
+      <LangSwitch
+        style={{
+          top: 80,
+          marginRight: 10,
+        }}
+        languages={languages}
+        curLang={curLang}
+        setCurLang={setCurLang}
+      />
+      <Button onPress={handleLogoutPress}>
+        {translate(translation, curLang, "signout")}
+      </Button>
     </HeaderWrapper>
   );
 };

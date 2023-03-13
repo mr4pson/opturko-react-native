@@ -1,34 +1,93 @@
-import React, { useState } from "react";
-import { TouchableOpacity } from "react-native";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Text, TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
 import { Button, Header, Page, Product } from "../../components";
-import { CATEGORIES, PRODUCTS, SUB_CATEGORIES } from "./constants";
+import { BASE_URL } from "../../constants/endpoint";
 import {
   checkIfAnyItemSelected,
+  getSections,
   getTitle,
   handleBackBtnPress,
   handleCategoryPress,
+  handleSectionPress,
   handleSend,
-  handleSubCategoryPress,
 } from "./helpers";
+import Toast from "react-native-toast-message";
+import { translate } from "../../helpers/translation.helper";
 
-const Categories = () => {
+const Categories = (props) => {
+  const { languages, translation } = props.route.params;
+  const [curLang, setCurLang] = React.useState();
+  const [curSection, setCurSection] = useState();
   const [curCategory, setCurCategory] = useState();
-  const [curSubCategory, setCurSubCategory] = useState();
   const [selected, setSelected] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    if (languages.length) {
+      setCurLang(languages[0]);
+    }
+  }, [languages]);
+
+  useEffect(() => {
+    (async () => {
+      if (curSection) {
+        try {
+          const response = await axios.get(
+            `${BASE_URL}/categories/bySection/${curSection}`
+          );
+          setCategories(response.data);
+        } catch (error) {
+          Toast.show({
+            type: "error",
+            text1: translate(translation, curLang, "serverError"),
+            text2: translate(translation, curLang, "contactAdministrator"),
+          });
+        }
+      }
+    })();
+  }, [curSection]);
+
+  useEffect(() => {
+    (async () => {
+      if (curCategory) {
+        try {
+          setProducts([]);
+          const response = await axios.get(
+            `${BASE_URL}/products/byCategory/${curCategory.id}`
+          );
+          setProducts(response.data);
+        } catch (error) {
+          console.log(error);
+          Toast.show({
+            type: "error",
+            text1: translate(translation, curLang, "serverError"),
+            text2: translate(translation, curLang, "contactAdministrator"),
+          });
+        }
+      }
+    })();
+  }, [curCategory]);
 
   return (
     <>
-      <Header />
+      <Header
+        translation={translation}
+        languages={languages}
+        curLang={curLang}
+        setCurLang={setCurLang}
+      />
       <Page>
         <PageHeader>
-          {!!curCategory && (
+          {!!curSection && (
             <TouchableOpacity
               onPress={handleBackBtnPress(
+                curSection,
                 curCategory,
-                curSubCategory,
-                setCurCategory,
-                setCurSubCategory
+                setCurSection,
+                setCurCategory
               )}
             >
               <BackBtnImage
@@ -36,35 +95,51 @@ const Categories = () => {
               ></BackBtnImage>
             </TouchableOpacity>
           )}
-          <PageTitle>{getTitle(curCategory, curSubCategory)}</PageTitle>
+          <PageTitle>
+            {getTitle(curSection, curCategory, translation, curLang)}
+          </PageTitle>
         </PageHeader>
-        {!curCategory &&
-          CATEGORIES.map(({ title, value }) => (
+        {!curSection &&
+          getSections(translation, curLang).map(({ title, value }, index) => (
             <CategoryButton
-              onPress={handleCategoryPress(value, setCurCategory)}
+              key={`category-btn-sec-${index}`}
+              onPress={handleSectionPress(value, setCurSection)}
             >
               {title}
             </CategoryButton>
           ))}
-        {curCategory &&
-          !curSubCategory &&
-          SUB_CATEGORIES.map((subCategory) => (
+        {curSection &&
+          !curCategory &&
+          categories.map((subCategory, index) => (
             <CategoryButton
-              onPress={handleSubCategoryPress(subCategory, setCurSubCategory)}
+              key={`caregory-btn-${index}`}
+              onPress={handleCategoryPress(subCategory, setCurCategory)}
             >
-              {subCategory.title}
+              {JSON.parse(subCategory.title)[curLang?.code]}
             </CategoryButton>
           ))}
-        {!!curSubCategory && (
-          <ProductGrid>
-            {PRODUCTS.map((product) => (
-              <Product product={product} setSelected={setSelected} />
-            ))}
-          </ProductGrid>
-        )}
+        {!!curCategory &&
+          (!!products.length ? (
+            <ProductGrid>
+              {products.map((product, index) => (
+                <Product
+                  key={`product-${index}`}
+                  product={product}
+                  selected={selected}
+                  setSelected={setSelected}
+                  translation={translation}
+                  curLang={curLang}
+                />
+              ))}
+            </ProductGrid>
+          ) : (
+            <Text>{translate(translation, curLang, "noProducts")}</Text>
+          ))}
       </Page>
       {checkIfAnyItemSelected(selected) && (
-        <SendBtn onPress={handleSend(selected)}>Отправить</SendBtn>
+        <SendBtn onPress={handleSend(selected, translation, curLang)}>
+          {translate(translation, curLang, "send")}
+        </SendBtn>
       )}
     </>
   );
@@ -79,7 +154,7 @@ const PageHeader = styled.View`
 `;
 
 const PageTitle = styled.Text`
-  font-family: "Inter";
+  /* font-family: "Inter"; */
   font-weight: 600;
   font-size: 26px;
   line-height: 31px;

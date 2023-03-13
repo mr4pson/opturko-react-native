@@ -1,21 +1,27 @@
 import { memo, useEffect, useState } from "react";
 import styled from "styled-components/native";
-import { Button, Counter } from "./";
+import { BASE_URL } from "../constants/endpoint";
+import { translate } from "../helpers/translation.helper";
+import Button from "./Button";
+import Counter from "./Counter";
 
-const Product = ({ product, setSelected }) => {
-  const { price, number, code, numberInPack, sizes, image } = product;
-  const [count, setCount] = useState(0);
+const Product = ({ product, setSelected, selected, curLang, translation }) => {
+  const curProduct = selected.find(
+    (selectedItem) => selectedItem.id === product.id && selectedItem.count > 0
+  );
+  const { price, code, numberInPack, sizes, image } = product;
+  const [count, setCount] = useState(curProduct?.count ?? 0);
 
   const handleBuyPress = (setCount) => () => {
     setCount((prev) => prev + 1);
   };
 
   useEffect(() => {
-    if (product.count !== count) {
+    if (curProduct?.count !== count) {
       setSelected((prev) => {
         const products = [...prev];
         const curProduct = prev.find(
-          (curProduct) => curProduct.code === product.code
+          (curProduct) => curProduct.id == product.id
         );
 
         if (!curProduct) {
@@ -32,17 +38,31 @@ const Product = ({ product, setSelected }) => {
     }
   }, [count]);
 
+  useEffect(() => {
+    if (curProduct) {
+      setCount(curProduct.count);
+    }
+  }, [selected, product]);
+
   return (
     <ProductWrapper>
-      <ProductImage source={image} />
+      <ProductImage source={{ uri: `${BASE_URL}/attachments/${image}` }} />
       <ProductInfo>
-        {price} / {number} шт. Код: {code}
+        ${price}
+        {!!count &&
+          ` / ${count} ${translate(translation, curLang, "productNumber")}($${
+            price * count
+          })`}
+        . {translate(translation, curLang, "code")} {code}
       </ProductInfo>
       <ProductInfo style={{ color: "#949494" }}>
-        {numberInPack} шт. в упк. {sizes}
+        {numberInPack} {translate(translation, curLang, "productNumber")}{" "}
+        {translate(translation, curLang, "inPackage")} {sizes}
       </ProductInfo>
       {!count ? (
-        <BuyBtn onPress={handleBuyPress(setCount)}>В корзину</BuyBtn>
+        <BuyBtn onPress={handleBuyPress(setCount)}>
+          {translate(translation, curLang, "addToCart")}
+        </BuyBtn>
       ) : (
         <Counter value={count} setValue={setCount} />
       )}

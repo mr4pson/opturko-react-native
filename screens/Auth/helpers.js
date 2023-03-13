@@ -1,18 +1,39 @@
+import { translate } from "../../helpers";
+
 const handleBtnClick =
-  (username, password, setUsernameError, setPasswordError, signIn) => () => {
-    const isUsernameValid = validateUserName(username, setUsernameError);
-    const isPasswordValid = validatePassword(password, setPasswordError);
+  (
+    username,
+    password,
+    setUsernameError,
+    setPasswordError,
+    signIn,
+    translation,
+    curLang
+  ) =>
+  () => {
+    const isUsernameValid = validateUserName(
+      username,
+      setUsernameError,
+      translation,
+      curLang
+    );
+    const isPasswordValid = validatePassword(
+      password,
+      setPasswordError,
+      translation,
+      curLang
+    );
 
     if (isUsernameValid && isPasswordValid) {
-      signIn({ username, password });
+      signIn({ login: username, password });
     }
   };
 
-const validateUserName = (value, setUsernameError) => {
+const validateUserName = (value, setUsernameError, translation, curLang) => {
   const reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
 
   if (reg.test(value) === false) {
-    setUsernameError("Неверный Email");
+    setUsernameError(translate(translation, curLang, "invalidEmail"));
 
     return false;
   }
@@ -22,9 +43,9 @@ const validateUserName = (value, setUsernameError) => {
   return true;
 };
 
-const validatePassword = (value, setPasswordError) => {
+const validatePassword = (value, setPasswordError, translation, curLang) => {
   if (!value) {
-    setPasswordError("Введите пароль");
+    setPasswordError(translate(translation, curLang, "invalidPassword"));
 
     return false;
   }

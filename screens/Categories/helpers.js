@@ -1,42 +1,62 @@
 import { Linking } from "react-native";
+import { translate } from "../../helpers/translation.helper";
+
+const handleSectionPress = (section, setCurSection) => () => {
+  setCurSection(section);
+};
 
 const handleCategoryPress = (category, setCurCategory) => () => {
   setCurCategory(category);
 };
 
-const handleSubCategoryPress = (subCategory, setCurSubCategory) => () => {
-  setCurSubCategory(subCategory);
+const getSections = (translation, curLang) => {
+  return [
+    {
+      title: translate(translation, curLang, "women"),
+      value: "WOMEN",
+    },
+    {
+      title: translate(translation, curLang, "men"),
+      value: "MEN",
+    },
+    {
+      title: translate(translation, curLang, "children"),
+      value: "CHILDREN",
+    },
+  ];
 };
 
-const getTitle = (category, subCategory) => {
-  if (subCategory) {
-    return subCategory.title;
+const getTitle = (section, category, translation, lang) => {
+  if (category && lang) {
+    const title = JSON.parse(category.title);
+
+    return title[lang?.code];
   }
 
-  switch (category) {
+  switch (section) {
     case "WOMEN":
-      return "Женщинам";
+      return translate(translation, lang, "women");
 
     case "MEN":
-      return "Мужчинам";
+      return translate(translation, lang, "men");
 
     case "CHILDREN":
-      return "Детям";
+      return translate(translation, lang, "children");
 
     default:
-      return "Категории";
+      return translate(translation, lang, "categories");
   }
 };
 
 const handleBackBtnPress =
-  (curCategory, curSubCategory, setCurCategory, setCurSubCategory) => () => {
-    if (curSubCategory) {
-      setCurSubCategory();
+  (curSection, curCategory, setCurSection, setCurCategory) => () => {
+    if (curCategory) {
+      setCurCategory();
 
       return;
     }
-    if (curCategory) {
-      setCurCategory();
+    if (curSection) {
+      setCurSection();
 
       return;
     }
@@ -48,12 +68,16 @@ const checkIfAnyItemSelected = (products) => {
   }, false);
 };
 
-const handleSend = (products) => () => {
-  const phone = "+79254494211";
+const handleSend = (products, translation, curLang) => () => {
+  const phone = "+905326819979";
   const message = products
     .filter((product) => product.count > 0)
     .reduce((accum, product) => {
-      const newChunck = `${product.code} - ${product.count} шт.`;
+      const newChunck = `${product.code} - ${product.count} ${translate(
+        translation,
+        curLang,
+        "productNumber"
+      )} x $${product.price} = $${product.price * product.count}`;
 
       if (accum) {
         return `${accum}, ${newChunck}`;
@@ -66,10 +90,11 @@ const handleSend = (products) => () => {
 };
 
 export {
+  handleSectionPress,
   handleCategoryPress,
-  handleSubCategoryPress,
   getTitle,
   handleBackBtnPress,
   checkIfAnyItemSelected,
   handleSend,
+  getSections,
 };
