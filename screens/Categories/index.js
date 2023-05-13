@@ -1,12 +1,14 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import styled from "styled-components/native";
 import { Button, Header, Page, Product } from "../../components";
 import { BASE_URL } from "../../constants/endpoint";
 import {
   checkIfAnyItemSelected,
   getSections,
+  getSorts,
   getTitle,
   handleBackBtnPress,
   handleCategoryPress,
@@ -19,11 +21,15 @@ import { translate } from "../../helpers/translation.helper";
 const Categories = (props) => {
   const { languages, translation } = props.route.params;
   const [curLang, setCurLang] = React.useState();
+  const sorts = getSorts(translation, curLang);
   const [curSection, setCurSection] = useState();
   const [curCategory, setCurCategory] = useState();
   const [selected, setSelected] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
+  const [sortedProducts, setSortedProducts] = useState([]);
+  const [selectedSort, setSelectedSort] = useState(sorts[0].value);
 
   useEffect(() => {
     if (languages.length) {
@@ -55,10 +61,12 @@ const Categories = (props) => {
       if (curCategory) {
         try {
           setProducts([]);
+          setLoading(true);
           const response = await axios.get(
             `${BASE_URL}/products/byCategory/${curCategory.id}`
           );
           setProducts(response.data);
+          setLoading(false);
         } catch (error) {
           console.log(error);
           Toast.show({
@@ -66,10 +74,28 @@ const Categories = (props) => {
             text1: translate(translation, curLang, "serverError"),
             text2: translate(translation, curLang, "contactAdministrator"),
           });
+          setLoading(false);
         }
       }
     })();
+    setSelectedSort(sorts[0].value);
   }, [curCategory]);
+
+  useEffect(() => {
+    (async () => {
+      if (!selectedSort || selectedSort === "CHEAP_FIRST") {
+        const sortedProducts = products.sort((a, b) => a.price - b.price);
+        await setSortedProducts([]);
+        setSortedProducts(sortedProducts);
+      }
+
+      if (selectedSort === "EXPENSIVE_FIRST") {
+        const sortedProducts = products.sort((a, b) => b.price - a.price);
+        await setSortedProducts([]);
+        setSortedProducts(sortedProducts);
+      }
+    })();
+  }, [selectedSort, products]);
 
   return (
     <>
@@ -99,6 +125,20 @@ const Categories = (props) => {
             {getTitle(curSection, curCategory, translation, curLang)}
           </PageTitle>
         </PageHeader>
+        {!!curCategory && (
+          <SortPicker
+            selectedValue={selectedSort}
+            onValueChange={(itemValue, itemIndex) => setSelectedSort(itemValue)}
+          >
+            {sorts.map((sort, index) => (
+              <Picker.Item
+                key={`sort-${index}`}
+                label={sort.title}
+                value={sort.value}
+              />
+            ))}
+          </SortPicker>
+        )}
         {!curSection &&
           getSections(translation, curLang).map(({ title, value }, index) => (
             <CategoryButton
@@ -118,10 +158,13 @@ const Categories = (props) => {
               {JSON.parse(subCategory.title)[curLang?.code]}
             </CategoryButton>
           ))}
-        {!!curCategory &&
-          (!!products.length ? (
+        {loading ? (
+          <Text>Loading...</Text>
+        ) : (
+          !!curCategory &&
+          (!!sortedProducts.length ? (
             <ProductGrid>
-              {products.map((product, index) => (
+              {sortedProducts.map((product, index) => (
                 <Product
                   key={`product-${index}`}
                   product={product}
@@ -134,7 +177,8 @@ const Categories = (props) => {
             </ProductGrid>
           ) : (
             <Text>{translate(translation, curLang, "noProducts")}</Text>
-          ))}
+          ))
+        )}
       </Page>
       {checkIfAnyItemSelected(selected) && (
         <SendBtn onPress={handleSend(selected, translation, curLang)}>
@@ -150,7 +194,8 @@ const PageHeader = styled.View`
   align-items: center;
   flex-direction: row;
   justify-content: center;
-  margin-bottom: 43px;
+  margin-top: 50px;
+  margin-bottom: 30px;
 `;
 
 const PageTitle = styled.Text`
@@ -160,6 +205,11 @@ const PageTitle = styled.Text`
   line-height: 31px;
   color: #000000;
   text-align: center;
+  max-width: 300px;
+`;
+
+const SortPicker = styled(Picker)`
+  margin-top: -30px;
 `;
 
 const CategoryButton = styled(Button)`
@@ -169,17 +219,17 @@ const CategoryButton = styled(Button)`
 `;
 
 const ProductGrid = styled.View`
-  width: 380px;
+  max-width: 380px;
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
-  gap: 35px;
+  gap: 15px;
   justify-content: space-between;
 `;
 
 const SendBtn = styled(Button)`
   background: #2db53b;
-  position: fixed;
+  /* position: fixed; */
   bottom: 0;
   height: 50px;
   display: flex;

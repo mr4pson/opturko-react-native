@@ -2,8 +2,9 @@ import { memo } from "react";
 import { Text } from "react-native";
 import styled from "styled-components/native";
 import Button from "./Button";
+import { translate } from "../helpers/translation.helper";
 
-const Counter = ({ value, setValue }) => {
+const Counter = ({ value, setValue, translation, curLang }) => {
   const handleReduce = () => {
     setValue((prev) => prev - 1);
   };
@@ -16,7 +17,9 @@ const Counter = ({ value, setValue }) => {
     <CounterWrapper>
       <ActionButton onPress={handleReduce}>-</ActionButton>
       <CounterBody>
-        <Text>{value} упк.</Text>
+        <Text>
+          {value} {translate(translation, curLang, "package")}
+        </Text>
       </CounterBody>
       <ActionButton onPress={handleIncrease}>+</ActionButton>
     </CounterWrapper>

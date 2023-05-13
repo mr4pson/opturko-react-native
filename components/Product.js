@@ -11,6 +11,7 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
   );
   const { price, code, numberInPack, sizes, image } = product;
   const [count, setCount] = useState(curProduct?.count ?? 0);
+  const url = `${BASE_URL}/attachments/${image}`;
 
   const handleBuyPress = (setCount) => () => {
     setCount((prev) => prev + 1);
@@ -20,7 +21,7 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
     if (curProduct?.count !== count) {
       setSelected((prev) => {
         const products = [...prev];
-        const curProduct = prev.find(
+        const curProduct = prev?.find(
           (curProduct) => curProduct.id == product.id
         );
 
@@ -50,8 +51,7 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
       <ProductInfo>
         ${price}
         {!!count &&
-          ` / ${count} ${translate(translation, curLang, "productNumber")}($${
-            price * count
+          ` / ${count} ${translate(translation, curLang, "productNumber")}($${price * count
           })`}
         . {translate(translation, curLang, "code")} {code}
       </ProductInfo>
@@ -64,7 +64,12 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
           {translate(translation, curLang, "addToCart")}
         </BuyBtn>
       ) : (
-        <Counter value={count} setValue={setCount} />
+        <Counter
+          value={count}
+          setValue={setCount}
+          translation={translation}
+          curLang={curLang}
+        />
       )}
     </ProductWrapper>
   );
@@ -73,7 +78,7 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
 const ProductWrapper = styled.View`
   display: flex;
   flex-direction: column;
-  max-width: 180px;
+  max-width: 170px;
   width: 100%;
   margin-bottom: 15px;
 `;

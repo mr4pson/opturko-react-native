@@ -1,5 +1,6 @@
 import { Linking } from "react-native";
 import { translate } from "../../helpers/translation.helper";
+import Toast from "react-native-toast-message";
 
 const handleSectionPress = (section, setCurSection) => () => {
   setCurSection(section);
@@ -22,6 +23,19 @@ const getSections = (translation, curLang) => {
     {
       title: translate(translation, curLang, "children"),
       value: "CHILDREN",
+    },
+  ];
+};
+
+const getSorts = (translation, curLang) => {
+  return [
+    {
+      title: translate(translation, curLang, "cheapFirst"),
+      value: "CHEAP_FIRST",
+    },
+    {
+      title: translate(translation, curLang, "expensiveFirst"),
+      value: "EXPENSIVE_FIRST",
     },
   ];
 };
@@ -63,12 +77,12 @@ const handleBackBtnPress =
   };
 
 const checkIfAnyItemSelected = (products) => {
-  return products.reduce((accum, product) => {
-    return accum || !!product.count;
+  return products?.reduce((accum, product) => {
+    return accum || !!product?.count;
   }, false);
 };
 
-const handleSend = (products, translation, curLang) => () => {
+const handleSend = (products, translation, curLang) => async () => {
   const phone = "+905326819979";
   const message = products
     .filter((product) => product.count > 0)
@@ -86,7 +100,15 @@ const handleSend = (products, translation, curLang) => () => {
       return newChunck;
     }, "");
 
-  Linking.openURL(`whatsapp://send?text=${message}&phone=${phone}`);
+  try {
+    await Linking.openURL(`whatsapp://send?text=${message}&phone=${phone}`);
+  } catch (error) {
+    Toast.show({
+      type: "error",
+      text1: "Oops. Something went wrong.",
+      text2: "Couldn'n have sent a whatsapp message.",
+    });
+  }
 };
 
 export {
@@ -97,4 +119,5 @@ export {
   checkIfAnyItemSelected,
   handleSend,
   getSections,
+  getSorts,
 };

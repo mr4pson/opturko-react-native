@@ -17,7 +17,7 @@ const Page = ({ children }) => {
 };
 
 const PageWrapper = styled.View`
-  padding-top: 83px;
+  padding: 83px 5px 0;
   flex: 1;
   align-items: center;
   justify-content: center;
