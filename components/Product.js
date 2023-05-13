@@ -4,6 +4,9 @@ import { BASE_URL } from "../constants/endpoint";
 import { translate } from "../helpers/translation.helper";
 import Button from "./Button";
 import Counter from "./Counter";
+import { Modal } from "react-native";
+import ImageViewer from "react-native-image-zoom-viewer";
+import { TouchableOpacity } from "react-native";
 
 const Product = ({ product, setSelected, selected, curLang, translation }) => {
   const curProduct = selected.find(
@@ -12,9 +15,19 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
   const { price, code, numberInPack, sizes, image } = product;
   const [count, setCount] = useState(curProduct?.count ?? 0);
   const url = `${BASE_URL}/attachments/${image}`;
+  const [isModalVisible, setModalVisible] = useState(false);
+  const images = [
+    {
+      url,
+    },
+  ];
 
   const handleBuyPress = (setCount) => () => {
     setCount((prev) => prev + 1);
+  };
+
+  const handleImageClick = () => {
+    setModalVisible((prev) => !prev);
   };
 
   useEffect(() => {
@@ -46,32 +59,44 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
   }, [selected, product]);
 
   return (
-    <ProductWrapper>
-      <ProductImage source={{ uri: `${BASE_URL}/attachments/${image}` }} />
-      <ProductInfo>
-        ${price}
-        {!!count &&
-          ` / ${count} ${translate(translation, curLang, "productNumber")}($${price * count
-          })`}
-        . {translate(translation, curLang, "code")} {code}
-      </ProductInfo>
-      <ProductInfo style={{ color: "#949494" }}>
-        {numberInPack} {translate(translation, curLang, "productNumber")}{" "}
-        {translate(translation, curLang, "inPackage")} {sizes}
-      </ProductInfo>
-      {!count ? (
-        <BuyBtn onPress={handleBuyPress(setCount)}>
-          {translate(translation, curLang, "addToCart")}
-        </BuyBtn>
-      ) : (
-        <Counter
-          value={count}
-          setValue={setCount}
-          translation={translation}
-          curLang={curLang}
+    <>
+      <ProductWrapper>
+        <TouchableOpacity onPress={handleImageClick}>
+          <ProductImage source={{ uri: `${BASE_URL}/attachments/${image}` }} />
+        </TouchableOpacity>
+        <ProductInfo>
+          ${price}
+          {!!count &&
+            ` / ${count} ${translate(translation, curLang, "productNumber")}($${
+              price * count
+            })`}
+          . {translate(translation, curLang, "code")} {code}
+        </ProductInfo>
+        <ProductInfo style={{ color: "#949494" }}>
+          {numberInPack} {translate(translation, curLang, "productNumber")}{" "}
+          {translate(translation, curLang, "inPackage")} {sizes}
+        </ProductInfo>
+        {!count ? (
+          <BuyBtn onPress={handleBuyPress(setCount)}>
+            {translate(translation, curLang, "addToCart")}
+          </BuyBtn>
+        ) : (
+          <Counter
+            value={count}
+            setValue={setCount}
+            translation={translation}
+            curLang={curLang}
+          />
+        )}
+      </ProductWrapper>
+      <Modal visible={isModalVisible} transparent={true}>
+        <ImageViewer
+          imageUrls={images}
+          enableSwipeDown={true}
+          onClick={handleImageClick}
         />
-      )}
-    </ProductWrapper>
+      </Modal>
+    </>
   );
 };
 
