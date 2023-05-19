@@ -24,6 +24,11 @@
   },
   "submit": {
     "production": {
+      "ios": {
+        "appleId": "sdurmus90@gmail.com",
+        "ascAppId": "6449370201",
+        "appleTeamId": "KXLGYXV4T9"
+      },
       "android": {
         "serviceAccountKeyPath": "../../pc-api-9016338379464754193-845-0acd7c9b6190.json"
       }
