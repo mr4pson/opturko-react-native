@@ -7,6 +7,7 @@ import Counter from "./Counter";
 import { Modal } from "react-native";
 import ImageViewer from "react-native-image-zoom-viewer";
 import { TouchableOpacity } from "react-native";
+import ExpoFastImage from "expo-fast-image";
 
 const Product = ({ product, setSelected, selected, curLang, translation }) => {
   const curProduct = selected.find(
@@ -62,7 +63,10 @@ const Product = ({ product, setSelected, selected, curLang, translation }) => {
     <>
       <ProductWrapper>
         <TouchableOpacity onPress={handleImageClick}>
-          <ProductImage source={{ uri: `${BASE_URL}/attachments/${image}` }} />
+          <ProductImage
+            uri={`${BASE_URL}/attachments/${image}`}
+            cacheKey={product.id}
+          />
         </TouchableOpacity>
         <ProductInfo>
           ${price}
@@ -108,7 +112,7 @@ const ProductWrapper = styled.View`
   margin-bottom: 15px;
 `;
 
-const ProductImage = styled.Image`
+const ProductImage = styled(ExpoFastImage)`
   width: 100%;
   height: 220px;
   border-radius: 12px;

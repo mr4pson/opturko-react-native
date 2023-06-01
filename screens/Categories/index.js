@@ -28,8 +28,8 @@ const Categories = (props) => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
-  const [sortedProducts, setSortedProducts] = useState([]);
   const [selectedSort, setSelectedSort] = useState(sorts[0].value);
+  const [currentOffset, setCurrentOffset] = useState(0);
 
   useEffect(() => {
     if (languages.length) {
@@ -60,12 +60,15 @@ const Categories = (props) => {
     (async () => {
       if (curCategory) {
         try {
-          setProducts([]);
           setLoading(true);
           const response = await axios.get(
-            `${BASE_URL}/products/byCategory/${curCategory.id}`
+            `${BASE_URL}/products/byCategory/${
+              curCategory.id
+            }?skip=${currentOffset}&limit=12&priceSort=${
+              !selectedSort || selectedSort === "CHEAP_FIRST" ? "ASC" : "DESC"
+            }`
           );
-          setProducts(response.data);
+          setProducts((prev) => prev.concat(response.data.data));
           setLoading(false);
         } catch (error) {
           console.log(error);
@@ -76,26 +79,21 @@ const Categories = (props) => {
           });
           setLoading(false);
         }
+      } else {
+        setProducts([]);
+        setCurrentOffset(0);
       }
     })();
-    setSelectedSort(sorts[0].value);
-  }, [curCategory]);
+  }, [curCategory, currentOffset, selectedSort]);
 
   useEffect(() => {
-    (async () => {
-      if (!selectedSort || selectedSort === "CHEAP_FIRST") {
-        const sortedProducts = products.sort((a, b) => a.price - b.price);
-        await setSortedProducts([]);
-        setSortedProducts(sortedProducts);
-      }
+    setCurrentOffset(0);
+    setProducts([]);
+  }, [selectedSort]);
 
-      if (selectedSort === "EXPENSIVE_FIRST") {
-        const sortedProducts = products.sort((a, b) => b.price - a.price);
-        await setSortedProducts([]);
-        setSortedProducts(sortedProducts);
-      }
-    })();
-  }, [selectedSort, products]);
+  const handleScrollEnd = () => {
+    setCurrentOffset((prev) => prev + 12);
+  };
 
   return (
     <>
@@ -105,7 +103,7 @@ const Categories = (props) => {
         curLang={curLang}
         setCurLang={setCurLang}
       />
-      <Page>
+      <Page onScrollEnd={handleScrollEnd}>
         <PageHeader>
           {!!curSection && (
             <TouchableOpacity
@@ -158,13 +156,10 @@ const Categories = (props) => {
               {JSON.parse(subCategory.title)[curLang?.code]}
             </CategoryButton>
           ))}
-        {loading ? (
-          <Text>Loading...</Text>
-        ) : (
-          !!curCategory &&
-          (!!sortedProducts.length ? (
+        {!!curCategory && !!products.length ? (
+          <>
             <ProductGrid>
-              {sortedProducts.map((product, index) => (
+              {products.map((product, index) => (
                 <Product
                   key={`product-${index}`}
                   product={product}
@@ -175,9 +170,12 @@ const Categories = (props) => {
                 />
               ))}
             </ProductGrid>
-          ) : (
-            <Text>{translate(translation, curLang, "noProducts")}</Text>
-          ))
+            {loading && <Text>Loading...</Text>}
+          </>
+        ) : !!curCategory && !products.length ? (
+          <Text>{translate(translation, curLang, "noProducts")}</Text>
+        ) : (
+          <></>
         )}
       </Page>
       {checkIfAnyItemSelected(selected) && (

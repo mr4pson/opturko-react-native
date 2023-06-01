@@ -2,11 +2,33 @@ import { SafeAreaView, ScrollView } from "react-native";
 import styled from "styled-components/native";
 import FocusedStatusBar from "./FocusedStatusBar";
 
-const Page = ({ children }) => {
+const Page = ({ children, onScrollEnd }) => {
+  const isCloseToBottom = ({
+    layoutMeasurement,
+    contentOffset,
+    contentSize,
+  }) => {
+    const paddingToBottom = 20;
+    return (
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom
+    );
+  };
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <PageWrapper>
-        <ScrollView contentContainerStyle={{}}>{children}</ScrollView>
+        <ScrollView
+          contentContainerStyle={{}}
+          onScroll={({ nativeEvent }) => {
+            if (isCloseToBottom(nativeEvent) && onScrollEnd) {
+              onScrollEnd();
+            }
+          }}
+          scrollEventThrottle={1500}
+        >
+          {children}
+        </ScrollView>
       </PageWrapper>
       <FocusedStatusBar background={"#ccc"} />
       <PageBackgroundWrapper>
